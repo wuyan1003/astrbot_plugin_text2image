@@ -1,7 +1,7 @@
 # Text2Image 文本渲染插件
 
 这是一个将文本渲染成图片的插件，支持自定义背景图片、字体、颜色和样式。
-图片示例（）
+图片示例（https://github.com/wuyan1003/astrbot_plugin_text2image/blob/master/%E7%A4%BA%E4%BE%8B%E5%9B%BE%E7%89%87/1.jpg）(https://github.com/wuyan1003/astrbot_plugin_text2image/blob/master/%E7%A4%BA%E4%BE%8B%E5%9B%BE%E7%89%87/2.jpg)(https://github.com/wuyan1003/astrbot_plugin_text2image/blob/master/%E7%A4%BA%E4%BE%8B%E5%9B%BE%E7%89%87/3.jpg)
 ## 功能特性
 
 - 支持自定义背景图片或随机背景
