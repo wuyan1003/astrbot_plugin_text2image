@@ -169,53 +169,66 @@ class Text2ImagePlugin(Star):
 
                 # 解析文本样式
                 text_segments = []
-                current_text = ""
                 current_style = {"size": default_font_size, "color": default_text_color}
                 
                 # 使用正则表达式匹配样式标记
                 style_pattern = r'\[(\d+),([^\]]+)\]'
-                parts = re.split(f'({style_pattern})', text)
                 
-                for part in parts:
-                    if not part:
-                        continue
-                    style_match = re.match(style_pattern, part)
-                    if style_match:
-                        # 保存当前文本段
-                        if current_text:
-                            text_segments.append({
-                                "text": current_text,
-                                "size": current_style["size"],
-                                "color": current_style["color"]
-                            })
-                            current_text = ""
-                        # 更新样式
-                        current_style["size"] = int(style_match.group(1))
-                        current_style["color"] = style_match.group(2)
-                    else:
-                        # 处理换行符
-                        lines = part.split('\\n')
-                        for i, line in enumerate(lines):
-                            if i > 0:
-                                text_segments.append({
-                                    "text": current_text,
-                                    "size": current_style["size"],
-                                    "color": current_style["color"]
-                                })
-                                current_text = ""
-                            current_text += line
+                # 先处理所有样式标记，记录它们的位置和样式
+                style_positions = []
+                offset = 0  # 用于跟踪已移除的样式标记长度
+                for match in re.finditer(style_pattern, text):
+                    # 计算实际位置（考虑已移除的样式标记）
+                    actual_pos = match.start() - offset
+                    style_positions.append({
+                        'pos': actual_pos,
+                        'size': int(match.group(1)),
+                        'color': match.group(2)
+                    })
+                    # 更新偏移量（加上当前样式标记的长度）
+                    offset += len(match.group(0))
+                
+                # 移除所有样式标记
+                clean_text = re.sub(style_pattern, '', text)
+                
+                # 按样式标记分割文本
+                last_pos = 0
+                for style in style_positions:
+                    if style['pos'] > last_pos:
+                        # 添加样式标记之前的文本
+                        text_segments.append({
+                            "text": clean_text[last_pos:style['pos']],
+                            "size": current_style["size"],
+                            "color": current_style["color"]
+                        })
+                    # 更新当前样式
+                    current_style["size"] = style['size']
+                    current_style["color"] = style['color']
+                    last_pos = style['pos']
                 
                 # 添加最后一段文本
-                if current_text:
+                if last_pos < len(clean_text):
                     text_segments.append({
-                        "text": current_text,
+                        "text": clean_text[last_pos:],
                         "size": current_style["size"],
                         "color": current_style["color"]
                     })
+                
+                # 处理换行符
+                final_segments = []
+                for segment in text_segments:
+                    lines = segment["text"].split('\\n')
+                    for line in lines:
+                        if line:  # 只添加非空行
+                            final_segments.append({
+                                "text": line,
+                                "size": segment["size"],
+                                "color": segment["color"]
+                            })
 
                 # 绘制文本
                 offset = margin
-                for segment in text_segments:
+                for segment in final_segments:
                     # 为每个文本段创建对应的字体
                     try:
                         if font_path and os.path.exists(font_path):
